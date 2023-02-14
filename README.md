@@ -2,11 +2,8 @@
 
 # Kursverwaltung in JavaFX
 
-## Wer alles da ist
+#Prüfungsprojekt SWE 2022/23
 
-Hallo ich bin da
-Ich auch!
+9 Teammitglieder
 
-## ich nicht
-
-*Moin Moin*
+Mein Part: 
