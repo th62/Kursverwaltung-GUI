@@ -8,10 +8,10 @@
 
 Mein Part:
 - StyleGuide (Bezeichner etc.)
-- UML Diagramm
-- JavaFX Multicontroller
+- UML-Diagramm
+- JavaFX Multi-Controller
 - TabPane Personenliste (Layout)
 - Globales CSS
-- Inputverifizierungen der Person
+- Input-Verifizierungen der Person
 - Meldung - Alert-Window bei Fehlern
 - Load und save der Objekte in Datei
