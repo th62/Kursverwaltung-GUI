@@ -25,11 +25,10 @@ public class KursListe {
     }
 
     public Kurs addNewKurs(String name, int anzahlTage, int zyklus, Date startDatum, int minTnZahl, int maxTnZahl,
-                           double gebuehrBrutto, double mwstProzent, String kursBeschreibung, String statusSTR) {
+                           double gebuehrBrutto, double mwstProzent, String kursBeschreibung, String kursStatus) {
         Kurs kurs = new Kurs(name, anzahlTage, zyklus, startDatum, minTnZahl, maxTnZahl,
-                gebuehrBrutto, mwstProzent, kursBeschreibung, statusSTR);
+                gebuehrBrutto, mwstProzent, kursBeschreibung, kursStatus);
         addKursZuListe(kurs);
-
         return kurs;
     }
 
@@ -52,6 +51,7 @@ public class KursListe {
     public void setBisDatum(Object value) {
         Calendar calendar = Calendar.getInstance();
         bisDatum = parseDate(value);
+        if (bisDatum == null) return;
         calendar.setTime(bisDatum);
         calendar.add(Calendar.DATE, 1);
         bisDatum = calendar.getTime();
@@ -68,8 +68,8 @@ public class KursListe {
         }
     }
 
-
     public void alertDatum(Date ab, Date bis) {
+        if (ab == null || bis == null) return;
         if (ab.after(bis)) {
             Meldung.eingabeFehler("bis-Datum muss größer als ab-Datum!!!");
             return;
@@ -86,5 +86,4 @@ public class KursListe {
         }
         return true;
     }
-
 }

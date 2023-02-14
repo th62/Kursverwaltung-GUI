@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.List;
 
 import static de.unibremen.akademie.kursverwaltung.domain.AnwendungsModel.kvModel;
+import static java.lang.Double.parseDouble;
 
 // TODO: Datumsänderung wird nicht aktualaiesiert.
 
@@ -33,9 +34,37 @@ public class KurseDetailsController {
     private final String pdfSpeicherPfad = "src/main/resources/de/unibremen/akademie/kursverwaltung/pdf/";
 
     @FXML
+    private ComboBox comboStatus;
+    @FXML
     public TextField txInpMwsProzent;
     @FXML
+    private TextField txInpKursname;
+    @FXML
+    private TextField txInpAnzahlTage;
+    @FXML
+    private TextField txInpZyklus;
+    @FXML
+    private TextField txInpMinTnZahl;
+    @FXML
+    private TextField txInpMaxTnZahl;
+    @FXML
+    private TextField txInpAktuelleTnZahl;
+    @FXML
+    private TextField txInpFreiePlaetze;
+    @FXML
+    private TextField txInpGebuehrBrutto;
+    @FXML
+    private TextField txInpGebuehrNetto;
+    @FXML
+    private TextField txInpMwsEuro;
+    @FXML
+    private TextArea txAreaKursBeschreibung;
+    @FXML
     public DatePicker pickAnwesenheitsDatum;
+    @FXML
+    private DatePicker pickStartDatum;
+    @FXML
+    private DatePicker pickEndDatum;
     @FXML
     public HBox hbxPrintAnwesenheitsliste;
     @FXML
@@ -55,15 +84,15 @@ public class KurseDetailsController {
     @FXML
     public Button btnTeilnehmerZuInteressent;
     @FXML
-    public TableView tablePerson;
+    public TableView tblPerson;
     @FXML
-    public TableView tableTeilnehmerPerson;
+    public TableView tblTeilnehmerPerson;
     @FXML
-    public TableView tableInteressentenPerson;
+    public TableView tblInteressentenPerson;
     @FXML
-    public TableColumn personName;
+    public TableColumn colPersonPersonName;
     @FXML
-    public TableColumn personNachName;
+    public TableColumn colPersonPersonNachName;
 
     @FXML
     public TableColumn colTeilnahmeKursePersonName;
@@ -75,36 +104,12 @@ public class KurseDetailsController {
     public TableColumn colInteresseKursePersonNachName;
     @FXML
     private Tab tabKurseDetails;
-    @FXML
-    private TextField txInpKursname;
-    @FXML
-    private TextField txInpAnzahlTage;
-    @FXML
-    private TextField txInpZyklus;
-    @FXML
-    private DatePicker pickStartDatum;
-    @FXML
-    private DatePicker pickEndDatum;
-    @FXML
-    private TextField txInpMinTnZahl;
-    @FXML
-    private TextField txInpMaxTnZahl;
-    @FXML
-    private TextField txInpAktuelleTnZahl;
-    @FXML
-    private TextField txInpFreiePlaetze;
-    @FXML
-    private TextField txInpGebuehrBrutto;
-    @FXML
-    private TextField txInpGebuehrNetto;
-    @FXML
-    private TextField txInpMwsEuro;
-    @FXML
-    private TextArea txtAreaKursBeschreibung;
-    @FXML
-    private ComboBox comboStatus;
     private MainController mainCtrl;
     private Object selectedItem;
+
+    public static boolean checkIsDouble(String wert) {
+        return wert.matches("\\d+(\\.|,\\d+)?");
+    }
 
     @FXML
     public void initialize() {
@@ -115,15 +120,16 @@ public class KurseDetailsController {
         pickStartDatum.setPromptText("01.01.1970");
         pickEndDatum.setPromptText("Wird kalkuliert!");
 
-        personName.setCellValueFactory(new PropertyValueFactory<Person, String>("vorname"));
-        personName.setCellFactory(TextFieldTableCell.<Person>forTableColumn());
+        colPersonPersonName.setCellValueFactory(new PropertyValueFactory<Person, String>("vorname"));
+        colPersonPersonName.setCellFactory(TextFieldTableCell.<Person>forTableColumn());
 
-        personNachName.setCellValueFactory(new PropertyValueFactory<Person, String>("nachname"));
-        personNachName.setCellFactory(TextFieldTableCell.<Person>forTableColumn());
+        colPersonPersonNachName.setCellValueFactory(new PropertyValueFactory<Person, String>("nachname"));
+        colPersonPersonNachName.setCellFactory(TextFieldTableCell.<Person>forTableColumn());
 
         TableView.TableViewSelectionModel<Kurs> selectionModel =
-                tablePerson.getSelectionModel();
-        selectionModel.setSelectionMode(SelectionMode.MULTIPLE);
+                tblPerson.getSelectionModel();
+        selectionModel.setSelectionMode(SelectionMode.SINGLE);
+
 
         // TODO Kurs vom Teilnehmer in TeilnahmeKurse anzeigen!!
         colTeilnahmeKursePersonName.setCellValueFactory(new PropertyValueFactory<Person, String>("vorname"));
@@ -137,11 +143,11 @@ public class KurseDetailsController {
         colInteresseKursePersonNachName.setCellValueFactory(new PropertyValueFactory<Person, String>("nachname"));
         colInteresseKursePersonNachName.setCellFactory(TextFieldTableCell.<Person>forTableColumn());
 
-        tablePerson.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> checkPersonTeilnehmerButton());
-        tableTeilnehmerPerson.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> checkPersonAusTeilnehmerButton());
-        tableInteressentenPerson.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> checkPersonInteressentenButton());
+        tblPerson.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> checkPersonTeilnehmerButton());
+        tblTeilnehmerPerson.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> checkPersonAusTeilnehmerButton());
+        tblInteressentenPerson.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> checkPersonInteressentenButton());
 
-        tablePerson.setItems(kvModel.getPersonen().getPersonenListe());
+        tblPerson.setItems(kvModel.getPersonen().getPersonenListe());
         checkPersonTeilnehmerButton();
         checkPersonAusTeilnehmerButton();
         checkPersonInteressentenButton();
@@ -149,22 +155,17 @@ public class KurseDetailsController {
     }
 
     private void checkPersonTeilnehmerButton() {
-        selectedItem = tablePerson.getSelectionModel().getSelectedItem();
-        boolean disable = tableTeilnehmerPerson.getItems().contains(selectedItem) || tableInteressentenPerson.getItems().contains(selectedItem);
+        selectedItem = tblPerson.getSelectionModel().getSelectedItem();
+        boolean disable = tblTeilnehmerPerson.getItems().contains(selectedItem) || tblInteressentenPerson.getItems().contains(selectedItem);
         btnPersonAlsTeilnehmer.setDisable(selectedItem == null || disable);
         btnPersonAlsInteressent.setDisable(selectedItem == null || disable);
+
     }
 
     private void checkPersonAusTeilnehmerButton() {
-        selectedItem = tableTeilnehmerPerson.getSelectionModel().getSelectedItem();
+        selectedItem = tblTeilnehmerPerson.getSelectionModel().getSelectedItem();
         btnTeilnehmerZuPerson.setDisable(selectedItem == null);
         btnTeilnehmerZuInteressent.setDisable(selectedItem == null);
-    }
-
-    private void checkPersonInteressentenButton() {
-        selectedItem = tableInteressentenPerson.getSelectionModel().getSelectedItem();
-        btnInteressentZuTeilnehmer.setDisable(selectedItem == null);
-        btnInteressentenZuPerson.setDisable(selectedItem == null);
 
     }
 
@@ -181,7 +182,7 @@ public class KurseDetailsController {
                 super.updateItem(item, empty);
                 if (item.isBefore(startDatum) || item.isAfter(endDatum)) {
                     setDisable(true);
-                    setStyle("-fx-background-color: #ffc0cb;");
+                    getStyleClass().add("pickAnwesenheitsDatum");
                 }
             }
         });
@@ -189,24 +190,11 @@ public class KurseDetailsController {
     }
 
     public void onClickAbbrechenKurs(ActionEvent actionEvent) {
-        txInpKursname.clear();
-        comboStatus.setValue(comboStatus.getPromptText());
-        txInpAnzahlTage.clear();
-        txInpZyklus.clear();
-        pickStartDatum.setValue(null);
-        txInpMinTnZahl.clear();
-        txInpMaxTnZahl.clear();
-        txInpGebuehrBrutto.clear();
-        txInpMwsProzent.clear();
-        txtAreaKursBeschreibung.clear();
-        pickEndDatum.setValue(null);
-        txInpFreiePlaetze.clear();
-        txInpAktuelleTnZahl.clear();
-        txInpMwsEuro.clear();
-        txInpGebuehrNetto.clear();
-        hbxPrintAnwesenheitsliste.setVisible(false);
-        hbxCsvTeilnehmerliste.setVisible(false);
-        btnKursSpeichern.setText("Speichern");
+        felderLeeren();
+        /////////// TODO MD
+        // umstellung auf StatusVariable?? (siehe personenDetails)
+        //kvModel.aktuellerKurs = null;
+
         if (kvModel.aktuellerKurs != null) {
             Tab plTab = mainCtrl.fxmlKurseListeController.tabKurseListe;
             plTab.getTabPane().getSelectionModel().select(plTab);
@@ -221,41 +209,12 @@ public class KurseDetailsController {
         }
     }
 
-    public void anzeigeZumAendernKurs(Kurs kurs) {
-        if (kurs != null) {
-            txInpKursname.setText(kurs.getName());
-            comboStatus.setValue(kurs.getStatus());
-            txInpAnzahlTage.setText(String.valueOf(kurs.getAnzahlTage()));
-            txInpZyklus.setText(String.valueOf(kurs.getZyklus()));
-            LocalDate datetolocal = LocalDate.ofInstant(kurs.getStartDatum().toInstant(), ZoneId.of("CET"));
-            pickStartDatum.setValue(datetolocal);
-            txInpMinTnZahl.setText(String.valueOf(kurs.getMinTnZahl()));
-            txInpMaxTnZahl.setText(String.valueOf(kurs.getMaxTnZahl()));
-            txInpGebuehrBrutto.setText(String.valueOf(kurs.getGebuehrBrutto()));
-            txInpMwsProzent.setText(String.valueOf(kurs.getMwstProzent()));
-            txtAreaKursBeschreibung.setText(kurs.getKursBeschreibung());
-            LocalDate datelocal = LocalDate.ofInstant(kurs.getEndeDatum().toInstant(), ZoneId.of("CET"));
-            pickEndDatum.setValue(datelocal);
-            txInpFreiePlaetze.setText(String.valueOf(kurs.getFreiePlaetze()));
-            txInpAktuelleTnZahl.setText(String.valueOf(kurs.getAktuelleTnZahl()));
-            txInpMwsEuro.setText(String.valueOf(kurs.getMwstEuro()));
-            txInpGebuehrNetto.setText(String.valueOf(kurs.getGebuehrNetto()));
-            btnKursSpeichern.setText("Update");
-            if (hatKursTeilnehmer()) {
-                // Auswahldatum auf die Dauer des Kurses einschränken
-                pickAnwesenheitsDatumSetzen(pickStartDatum.getValue(), pickEndDatum.getValue());
-                hbxPrintAnwesenheitsliste.setVisible(true);
-                hbxCsvTeilnehmerliste.setVisible(true);
-            } else {
-                hbxPrintAnwesenheitsliste.setVisible(false);
-                hbxCsvTeilnehmerliste.setVisible(false);
-            }
+    private void checkPersonInteressentenButton() {
+        selectedItem = tblInteressentenPerson.getSelectionModel().getSelectedItem();
+        btnInteressentZuTeilnehmer.setDisable(selectedItem == null);
+        btnInteressentenZuPerson.setDisable(selectedItem == null);
 
-            tableTeilnehmerPerson.getItems().clear();
-            tableTeilnehmerPerson.getItems().addAll(kvModel.getPkListe().getPersonen(kurs, true));
-            tableInteressentenPerson.getItems().clear();
-            tableInteressentenPerson.getItems().addAll(kvModel.getPkListe().getPersonen(kurs, false));
-        }
+
     }
 
     public void interessentenlist(ActionEvent actionEvent) {
@@ -272,6 +231,50 @@ public class KurseDetailsController {
         mainCtrl = mainController;
     }
 
+    public void anzeigeZumAendernKurs(Kurs kurs) {
+        if (kurs != null) {
+            txInpKursname.setText(kurs.getName());
+            comboStatus.setValue(kurs.getStatus());
+            txInpAnzahlTage.setText(String.valueOf(kurs.getAnzahlTage()));
+            txInpZyklus.setText(String.valueOf(kurs.getZyklus()));
+            LocalDate datetolocal = LocalDate.ofInstant(kurs.getStartDatum().toInstant(), ZoneId.of("CET"));
+            pickStartDatum.setValue(datetolocal);
+            txInpMinTnZahl.setText(String.valueOf(kurs.getMinTnZahl()));
+            txInpMaxTnZahl.setText(String.valueOf(kurs.getMaxTnZahl()));
+            txInpGebuehrBrutto.setText(String.valueOf(kurs.getGebuehrBrutto()));
+            txInpMwsProzent.setText(String.valueOf(kurs.getMwstProzent()));
+            //if(kurs.getKursBeschreibung()!=null)
+            txAreaKursBeschreibung.setText(kurs.getKursBeschreibung());
+            LocalDate datelocal = LocalDate.ofInstant(kurs.getEndeDatum().toInstant(), ZoneId.of("CET"));
+            pickEndDatum.setValue(datelocal);
+            txInpFreiePlaetze.setText(String.valueOf(kurs.getFreiePlaetze()));
+            txInpAktuelleTnZahl.setText(String.valueOf(kurs.getAktuelleTnZahl()));
+            txInpMwsEuro.setText(String.valueOf(kurs.getMwstEuro()));
+            txInpGebuehrNetto.setText(String.valueOf(kurs.getGebuehrNetto()));
+            btnKursSpeichern.setText("Update");
+            //h-boxen für Pdf und Csv anzeigen, wenn der Kurs Teilnehmer hat
+            if (hatKursTeilnehmer()) {
+                // Auswahldatum auf die Dauer des Kurses einschränken
+                pickAnwesenheitsDatumSetzen(pickStartDatum.getValue(), pickEndDatum.getValue());
+                hbxPrintAnwesenheitsliste.setVisible(true);
+                hbxCsvTeilnehmerliste.setVisible(true);
+            } else {
+                hbxPrintAnwesenheitsliste.setVisible(false);
+                hbxCsvTeilnehmerliste.setVisible(false);
+            }
+
+            tblTeilnehmerPerson.getItems().clear();
+            tblTeilnehmerPerson.getItems().addAll(kvModel.getPkListe().getPersonen(kurs, true));
+            tblInteressentenPerson.getItems().clear();
+            tblInteressentenPerson.getItems().addAll(kvModel.getPkListe().getPersonen(kurs, false));
+        }
+    }
+
+    // checks fuer die Umwandlungen beim Auslesen und Zuweisen der GUI-Felder
+    public static boolean checkIsInt(String wert) {
+        return wert.matches("\\d+");
+    }
+
     // FIXME: status leer gibt keinen Fehlermeldung
     public void onClickSaveKurs(ActionEvent actionEvent) {
         Kurs kurs = null;
@@ -285,9 +288,11 @@ public class KurseDetailsController {
                 kvModel.aktuellerKurs.setStartDatum(Date.from(localDate.atStartOfDay(ZoneId.of("CET")).toInstant()));
                 kvModel.aktuellerKurs.setMinTnZahl((Integer.parseInt(txInpMinTnZahl.getText())));
                 kvModel.aktuellerKurs.setMaxTnZahl((Integer.parseInt(txInpMaxTnZahl.getText())));
-                kvModel.aktuellerKurs.setGebuehrBrutto((Double.parseDouble(txInpGebuehrBrutto.getText())));
-                kvModel.aktuellerKurs.setMwstProzent((Double.parseDouble(txInpMwsProzent.getText())));
-                kvModel.aktuellerKurs.setKursBeschreibung(txtAreaKursBeschreibung.getText());
+                double gebuehrBrutto = (txInpGebuehrBrutto.getText().contains(",")) ? parseDouble(txInpGebuehrBrutto.getText().replace(",", ".")) : parseDouble(txInpGebuehrBrutto.getText());
+                double mwstProzent = (txInpMwsProzent.getText().contains((","))) ? parseDouble(txInpMwsProzent.getText().replace(",", ".")) : parseDouble(txInpMwsProzent.getText());
+                kvModel.aktuellerKurs.setGebuehrBrutto(gebuehrBrutto);
+                kvModel.aktuellerKurs.setMwstProzent(mwstProzent);
+                kvModel.aktuellerKurs.setKursBeschreibung(txAreaKursBeschreibung.getText());
                 kvModel.aktuellerKurs.setEndeDatum();
                 kvModel.aktuellerKurs.setGebuehrNetto();
                 kvModel.aktuellerKurs.setFreiePlaetze();
@@ -314,33 +319,34 @@ public class KurseDetailsController {
 
                 //  TODO 04.02
 
-                kvModel.getPkListe().addPersonAlsTeilNehmer(kvModel.aktuellerKurs, this.tableTeilnehmerPerson.getItems());
+                kvModel.getPkListe().addPersonAlsTeilNehmer(kvModel.aktuellerKurs, this.tblTeilnehmerPerson.getItems());
+                kvModel.getPkListe().addPersonAlsInteressent(kvModel.aktuellerKurs, this.tblInteressentenPerson.getItems());
 
             } catch (Exception e) {
                 Meldung.eingabeFehler(e.getMessage());
                 return;
             }
             btnKursSpeichern.setText("Speichern");
-            mainCtrl.fxmlKurseListeController.tableKurseListe.refresh();
-            mainCtrl.fxmlPersonenDetailsController.tableKurse.refresh();
+            mainCtrl.fxmlKurseListeController.tblKurseListe.refresh();
+            mainCtrl.fxmlPersonenDetailsController.tblKurse.refresh();
 
         } else {
-            int anzahl = 0, zykls = 0, minTn = 0, maxTn = 0;
-            double gebuhrB = 0, mwstPro = 0;
+            int anzahlTage, zyklusTage, minTn, maxTn;
+            double gebuehrBrutto, mwstProzent;
             LocalDate localDate;
             Date startDate = null;
 
             // Kurs kurs;
 
-            String name = txInpKursname.getText();
-            String kursBesch = txtAreaKursBeschreibung.getText();
-            String statusSTR = comboStatus.getSelectionModel().getSelectedItem().toString();
+            String kursName = txInpKursname.getText();
+            String kursBeschreibung = txAreaKursBeschreibung.getText();
+            String kursStatus;
 
             try {
                 if (comboStatus.getSelectionModel().getSelectedIndex() == -1) {
                     throw new IllegalArgumentException("Bitte einen Kurs-Status eingeben");
                 } else {
-                    statusSTR = comboStatus.getSelectionModel().getSelectedItem().toString();
+                    kursStatus = comboStatus.getSelectionModel().getSelectedItem().toString();
                 }
             } catch (Exception e) {
                 Meldung.eingabeFehler(e.getMessage());
@@ -354,18 +360,18 @@ public class KurseDetailsController {
                         !checkIsInt(txInpMaxTnZahl.getText())) {
                     throw new IllegalArgumentException("Bitte nur ganze Zahlen (1) eingeben!");
                 } else {
-                    anzahl = Integer.parseInt(txInpAnzahlTage.getText());
-                    zykls = Integer.parseInt(txInpZyklus.getText());
+                    anzahlTage = Integer.parseInt(txInpAnzahlTage.getText());
+                    zyklusTage = Integer.parseInt(txInpZyklus.getText());
                     minTn = Integer.parseInt(txInpMinTnZahl.getText());
                     maxTn = Integer.parseInt(txInpMaxTnZahl.getText());
                 }
 
                 if (!checkIsDouble(txInpGebuehrBrutto.getText()) ||
                         !checkIsDouble(txInpMwsProzent.getText())) {
-                    throw new IllegalArgumentException("Bitte nur Zahlen mit Nachkommastelle (1.0) eingeben!");
+                    throw new IllegalArgumentException("Bitte nur Zahlen eingeben!");
                 } else {
-                    gebuhrB = Double.parseDouble(txInpGebuehrBrutto.getText());
-                    mwstPro = Double.parseDouble(txInpMwsProzent.getText());
+                    gebuehrBrutto = (txInpGebuehrBrutto.getText().contains(",")) ? parseDouble(txInpGebuehrBrutto.getText().replace(",", ".")) : parseDouble(txInpGebuehrBrutto.getText());
+                    mwstProzent = (txInpMwsProzent.getText().contains((","))) ? parseDouble(txInpMwsProzent.getText().replace(",", ".")) : parseDouble(txInpMwsProzent.getText());
                 }
 
                 if (!checkIsDate(String.valueOf(pickStartDatum.getValue()))) {
@@ -379,12 +385,12 @@ public class KurseDetailsController {
                 return;
             }
 
-            try {
-                kurs = kvModel.getKurse().addNewKurs(name, anzahl, zykls, startDate, minTn, maxTn, gebuhrB, mwstPro, kursBesch, statusSTR);
-            } catch (Exception e) {
-                Meldung.eingabeFehler(e.getMessage());
-                return;
-            }
+            // try {
+            kurs = kvModel.getKurse().addNewKurs(kursName, anzahlTage, zyklusTage, startDate, minTn, maxTn, gebuehrBrutto, mwstProzent, kursBeschreibung, kursStatus);
+            //} catch (Exception e) {
+            // Meldung.eingabeFehler(e.getMessage());
+            //return;
+            // }
 
             LocalDate datetolocal = LocalDate.ofInstant(kurs.getEndeDatum().toInstant(), ZoneId.of("CET"));
             pickEndDatum.setValue(datetolocal);
@@ -392,39 +398,21 @@ public class KurseDetailsController {
             txInpFreiePlaetze.setText(String.valueOf(kurs.getFreiePlaetze()));
             txInpMwsEuro.setText(String.valueOf(kurs.getMwstEuro()));
             txInpGebuehrNetto.setText(String.valueOf(kurs.getGebuehrNetto()));
+            kvModel.getPkListe().addPersonAlsTeilNehmer(kurs, this.tblTeilnehmerPerson.getItems());
+            kvModel.getPkListe().addPersonAlsInteressent(kurs, this.tblInteressentenPerson.getItems());
 
         }
         kvModel.aktuellerKurs = null;
 
         Tab klTab = mainCtrl.fxmlKurseListeController.tabKurseListe;
 
-        mainCtrl.fxmlKurseListeController.tableKurseListe.refresh();
-        mainCtrl.fxmlPersonenListeController.tablePersonenListe.refresh();
+        mainCtrl.fxmlKurseListeController.tblKurseListe.refresh();
+        mainCtrl.fxmlPersonenListeController.tblPersonenListe.refresh();
 
 
         klTab.getTabPane().getSelectionModel().select(klTab);
-        mainCtrl.fxmlKurseListeController.tableKurseListe.getSelectionModel().clearSelection();
-        mainCtrl.fxmlKurseListeController.tableKurseListe.getSelectionModel().select(kurs);
-
-//    @FXML
-//    private TableView tableViewTeilnehmerZu;
-
-//    private TableView tableViewInteressentenZu;
-//        for (Tab tabPaneKursListe : tabKurseDetails.getTabPane().getTabs()) {
-//            if (tabPaneKursListe.getText().equals("Kurse-Liste")) {
-//                tabPaneKursListe.getTabPane().getSelectionModel().select(tabPaneKursListe);
-//            }
-//        }
-//        onClickAbbrechenKurs(actionEvent);
-    }
-
-    // checks fuer die Umwandlungen beim Auslesen und Zuweisen der GUI-Felder
-    public static boolean checkIsInt(String wert) {
-        return wert.matches("\\d+");
-    }
-
-    public static boolean checkIsDouble(String wert) {
-        return wert.matches("\\d+\\.\\d+");
+        mainCtrl.fxmlKurseListeController.tblKurseListe.getSelectionModel().clearSelection();
+        mainCtrl.fxmlKurseListeController.tblKurseListe.getSelectionModel().select(kurs);
     }
 
     public static boolean checkIsDate(String wert) {
@@ -454,7 +442,7 @@ public class KurseDetailsController {
     public boolean hatKursTeilnehmer() {
         int teilnehmendePersonen = 0;
         for (PersonKurs personKurs : kvModel.getPkListe().personKursList) {
-            if (personKurs.getKurs().getName().equals(kvModel.aktuellerKurs.getName()) && personKurs.isTeilnehmer()) {
+            if (personKurs.getKurs().getName().equals(kvModel.aktuellerKurs.getName()) && personKurs.istTeilnehmer()) {
                 Person person = personKurs.getPerson();
                 teilnehmendePersonen++;
             }
@@ -476,16 +464,16 @@ public class KurseDetailsController {
                 try {
                     FileWriter writer = new FileWriter(file);
                     String csvTrenner = pkListe.get(0).getCSVTRENNER();
-                    writer.append("Anrede" + csvTrenner +
-                            "Titel" + csvTrenner +
-                            "Vorname" + csvTrenner +
-                            "Nachname" + csvTrenner +
-                            "Strasse" + csvTrenner +
-                            "PLZ" + csvTrenner +
-                            "Ort" + csvTrenner +
-                            "E-Mail" + csvTrenner +
-                            "telefon" + csvTrenner +
-                            '\n');
+                    writer.append("Anrede").append(csvTrenner)
+                            .append("Titel").append(csvTrenner)
+                            .append("Vorname").append(csvTrenner)
+                            .append("Nachname").append(csvTrenner)
+                            .append("Strasse").append(csvTrenner)
+                            .append("PLZ").append(csvTrenner)
+                            .append("Ort").append(csvTrenner)
+                            .append("E-Mail").append(csvTrenner)
+                            .append("telefon").append(csvTrenner)
+                            .append(String.valueOf('\n'));
                     for (Person p : pkListe) {
                         writer.append(p.toCsv());
                         writer.append('\n');
@@ -506,38 +494,62 @@ public class KurseDetailsController {
     }
 
     public void onClickPersonZuTeilnehmer(ActionEvent actionEvent) {
-        tableTeilnehmerPerson.getItems().add(tablePerson.getSelectionModel().getSelectedItem());
-        tablePerson.getSelectionModel().clearSelection();
+        tblTeilnehmerPerson.getItems().add(tblPerson.getSelectionModel().getSelectedItem());
+        tblPerson.getSelectionModel().clearSelection();
     }
 
     public void onClickPersonZuInteressent(ActionEvent actionEvent) {
 
-        tableInteressentenPerson.getItems().add(tablePerson.getSelectionModel().getSelectedItem());
-        tablePerson.getSelectionModel().clearSelection();
+        tblInteressentenPerson.getItems().add(tblPerson.getSelectionModel().getSelectedItem());
+        tblPerson.getSelectionModel().clearSelection();
 
     }
 
     public void onClickTeilnehmerZuInteressent(ActionEvent actionEvent) {
         //System.out.println("Teilnehmer zu Interessent!");
-        tableInteressentenPerson.getItems().add(tableTeilnehmerPerson.getSelectionModel().getSelectedItem());
-        tableTeilnehmerPerson.getItems().removeAll(tableTeilnehmerPerson.getSelectionModel().getSelectedItems());
+        tblInteressentenPerson.getItems().add(tblTeilnehmerPerson.getSelectionModel().getSelectedItem());
+        tblTeilnehmerPerson.getItems().removeAll(tblTeilnehmerPerson.getSelectionModel().getSelectedItems());
+        tblTeilnehmerPerson.getSelectionModel().clearSelection();
+
 
     }
 
     public void onClickInteressentZuTeilnehmer(ActionEvent actionEvent) {
-        tableTeilnehmerPerson.getItems().add(tableInteressentenPerson.getSelectionModel().getSelectedItem());
-        tableInteressentenPerson.getItems().removeAll(tableInteressentenPerson.getSelectionModel().getSelectedItems());
+        tblTeilnehmerPerson.getItems().add(tblInteressentenPerson.getSelectionModel().getSelectedItem());
+        tblInteressentenPerson.getItems().removeAll(tblInteressentenPerson.getSelectionModel().getSelectedItems());
+        tblInteressentenPerson.getSelectionModel().clearSelection();
 
     }
 
     public void onClickPersonRausAusInteressent(ActionEvent actionEvent) {
-        tableInteressentenPerson.getItems().removeAll(tableInteressentenPerson.getSelectionModel().getSelectedItem());
+        tblInteressentenPerson.getItems().removeAll(tblInteressentenPerson.getSelectionModel().getSelectedItem());
+        tblInteressentenPerson.getSelectionModel().clearSelection();
 
     }
 
     public void onClickPersonRausAusTeilnehmer(ActionEvent actionEvent) {
-        tableTeilnehmerPerson.getItems().remove(tableTeilnehmerPerson.getSelectionModel().getSelectedItem());
+        tblTeilnehmerPerson.getItems().remove(tblTeilnehmerPerson.getSelectionModel().getSelectedItem());
+        tblTeilnehmerPerson.getSelectionModel().clearSelection();
     }
 
-
+    public void felderLeeren () {
+        txInpKursname.clear();
+        comboStatus.setValue(comboStatus.getPromptText());
+        txInpAnzahlTage.clear();
+        txInpZyklus.clear();
+        pickStartDatum.setValue(null);
+        txInpMinTnZahl.clear();
+        txInpMaxTnZahl.clear();
+        txInpGebuehrBrutto.clear();
+        txInpMwsProzent.clear();
+        txAreaKursBeschreibung.clear();
+        pickEndDatum.setValue(null);
+        txInpFreiePlaetze.clear();
+        txInpAktuelleTnZahl.clear();
+        txInpMwsEuro.clear();
+        txInpGebuehrNetto.clear();
+        hbxPrintAnwesenheitsliste.setVisible(false);
+        hbxCsvTeilnehmerliste.setVisible(false);
+        btnKursSpeichern.setText("Speichern");
+    }
 }

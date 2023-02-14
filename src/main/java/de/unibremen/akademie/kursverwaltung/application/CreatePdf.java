@@ -180,7 +180,7 @@ public class CreatePdf {
         // Anzahl der teilnehmenden Personen ermitteln
         int teilnehmendePersonen = 0;
         for (PersonKurs personKurs : kvModel.getPkListe().personKursList) {
-            if (personKurs.getKurs().getName().equals(kursName) && personKurs.isTeilnehmer()) {
+            if (personKurs.getKurs().getName().equals(kursName) && personKurs.istTeilnehmer()) {
                 teilnehmendePersonen++;
             }
         }
@@ -201,7 +201,7 @@ public class CreatePdf {
             tabellenHeader(table, headline, seitenGesamt);
 
             for (PersonKurs personKurs : kvModel.getPkListe().personKursList) {
-                if (personKurs.getKurs().getName().equals(kursName) && personKurs.isTeilnehmer()) {
+                if (personKurs.getKurs().getName().equals(kursName) && personKurs.istTeilnehmer()) {
                     Person person = personKurs.getPerson();
                     counterListenEintraege++;
                     if (counterListenEintraege <= anzahlTeilnehmerJeSeite) {
@@ -263,7 +263,7 @@ public class CreatePdf {
 
     // Daten für die Liste aller Kurse holen und formatieren
     public String kursToPDF(Kurs kurs) {
-        return kurs.getName() + "\tStatus: " + kurs.getStatus() + neueZeile +
+        return kurs.getName() + tabulator + "Status: " + kurs.getStatus() + neueZeile +
                 "Start: " + dateOhneZeit.format(kurs.getStartDatum()) + tabulator +
                 "Ende: " + dateOhneZeit.format(kurs.getEndeDatum()) + tabulator +
                 "Dauer: " + kurs.getAnzahlTage() + " Tage" + neueZeile +

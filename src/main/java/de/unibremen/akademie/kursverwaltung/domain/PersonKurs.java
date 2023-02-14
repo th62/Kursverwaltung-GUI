@@ -31,7 +31,7 @@ public class PersonKurs implements Externalizable {
         this.kurs = kurs;
     }
 
-    public boolean isTeilnehmer() {
+    public boolean istTeilnehmer() {
         return teilnehmer;
     }
 
@@ -41,10 +41,9 @@ public class PersonKurs implements Externalizable {
 
     @Override
     public void writeExternal(ObjectOutput stream) throws IOException {
-
         stream.writeObject(getPerson());
         stream.writeObject(getKurs());
-        stream.writeUTF(String.valueOf(isTeilnehmer()));
+        stream.writeUTF(String.valueOf(istTeilnehmer()));
     }
 
     @Override
