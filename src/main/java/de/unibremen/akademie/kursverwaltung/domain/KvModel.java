@@ -118,8 +118,8 @@ public class KvModel {
         if (kurse.getKursListe().size() <= 0) {
             kurse.addNewKurs("PHP-Einsteiger", 14, 2, new Date(1900368000000L), 3, 6, 199.00, 19.0, "PHP für Dummies", "Aktiv");
             kurse.addNewKurs("Angular FE", 21, 3, new Date(1901232000000L), 2, 8, 849.00, 19.0, "Angular für Frontend-Entwickler", "Aktiv");
-            kurse.addNewKurs("Arduino", 5, 5, new Date(1899763200000L), 10, 12, 79.00, 19.0, "Arduino für Kids und Großeltern", "geplant");
-            kurse.addNewKurs("Deep S9", 32, 4, new Date(1911772800000L), 8, 9, 1275.00, 19.0, "Deep learning mit Python", "Abgesagt");
+            kurse.addNewKurs("Arduino", 5, 5, new Date(1899763200000L), 10, 12, 79.00, 19.0, "Arduino für Kids und Großeltern", "Geplant");
+            kurse.addNewKurs("Deep S9", 32, 4, new Date(1911772800000L), 8, 9, 1275.00, 19.0, "Deep learning mit Python", "Geplant");
             kurse.addNewKurs("Web-Start", 7, 3, new Date(1920240000000L), 12, 15, 249.00, 19.0, "HTML und CSS zum Frühstück", "Aktiv");            // startdatum 31.01.2023
             // kurse.addNewKurs("Web-Profi", 21, 3, new Date(1675123200000L), 1, 10, 299.00, 19.0, "HTML und CSS wie im Schlaf", "Aktiv");
             System.out.println("Kurs-Standarddaten wurde geladen!");
@@ -174,7 +174,7 @@ public class KvModel {
                 for (Person person : list) {
                     details = details + person.getNachname() + " " + person.getVorname() + " " + person.getEmail() + '\n';
                 }
-                Meldung.eingabeFehler(kurs.getName() + " enthält noch Teilnehmer bitte die Personen Informieren " + '\n' + details);
+                Meldung.eingabeFehler(kurs.getName() + " enthält noch Teilnehmer bitte die Personen informieren " + '\n' + details);
                 kurse.getKursListe().remove(kurs);
                 pkListe.removeAll(kurs);
             } else {
